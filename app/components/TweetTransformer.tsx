@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FilterButton, FilterPanel, type Filters } from "./FilterOptions";
 import { ContextButton, ContextPanel } from "./ContextSettings";
+
+type OpenPanel = "none" | "context" | "filters";
+
+const CONTEXT_STORAGE_KEY = "TweetSmith-context";
 
 export function TweetTransformer() {
   const [input, setInput] = useState("");
@@ -10,13 +14,19 @@ export function TweetTransformer() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ maxChars: 280, emojiMode: "none" });
-  const [contextOpen, setContextOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<OpenPanel>("none");
+  const [filters, setFilters] = useState<Filters>({ maxChars: 280, emojiMode: "few" });
   const [context, setContext] = useState("");
   const hasContext = context.length > 0;
   const characterCount = input.length;
   const maxCharacters = 280;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(CONTEXT_STORAGE_KEY);
+      if (stored) setContext(stored);
+    }
+  }, []);
 
   const handleTransform = async () => {
     if (!input.trim()) return;
@@ -28,9 +38,7 @@ export function TweetTransformer() {
     try {
       const response = await fetch("/api/transform", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ draft: input, filters, context }),
       });
 
@@ -49,6 +57,10 @@ export function TweetTransformer() {
     }
   };
 
+  const togglePanel = (panel: "context" | "filters") => {
+    setOpenPanel(openPanel === panel ? "none" : panel);
+  };
+
   return (
     <div className="w-full max-w-md">
       <div className="bg-[#1c1c1c] border border-[#2a2a2a] rounded-xl p-5">
@@ -63,8 +75,8 @@ export function TweetTransformer() {
           className="w-full bg-[#1c1c1c] text-[#fafafa] placeholder-[#888888] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-[#3a3a3a] transition-colors"
         />
         <div className="flex items-center gap-2 mt-3">
-          <ContextButton isOpen={contextOpen} onToggle={() => setContextOpen(!contextOpen)} hasContext={hasContext} />
-          <FilterButton isOpen={filtersOpen} onToggle={() => setFiltersOpen(!filtersOpen)} filters={filters} />
+          <ContextButton isOpen={openPanel === "context"} onToggle={() => togglePanel("context")} hasContext={hasContext} />
+          <FilterButton isOpen={openPanel === "filters"} onToggle={() => togglePanel("filters")} filters={filters} />
           <div className="flex items-center gap-3 ml-auto">
             <span className={`text-xs ${characterCount > maxCharacters ? "text-red-400" : "text-[#888888]"}`}>
               {characterCount} / {maxCharacters}
@@ -78,11 +90,9 @@ export function TweetTransformer() {
             </button>
           </div>
         </div>
-        {contextOpen && <ContextPanel onContextChange={setContext} />}
-        {filtersOpen && <FilterPanel filters={filters} onFiltersChange={setFilters} />}
-        {error && (
-          <p className="mt-3 text-xs text-red-400">{error}</p>
-        )}
+        {openPanel === "context" && <ContextPanel onContextChange={setContext} />}
+        {openPanel === "filters" && <FilterPanel filters={filters} onFiltersChange={setFilters} />}
+        {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
       </div>
 
       {result && (
