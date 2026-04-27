@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWithOllama } from "../../lib/ollama";
 
-/**
- * POST /api/transform
- * Transforms a draft tweet using Ollama LLM
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { draft, filters } = body;
-    const { maxChars = 280, emojiMode = "none" } = filters || {};
+    const { draft, filters, context } = body;
+    const { maxChars = 280, emojiMode = "few" } = filters || {};
 
-    // Validate input
     if (!draft || typeof draft !== "string") {
       return NextResponse.json(
         { error: "Invalid request: 'draft' must be a non-empty string" },
@@ -19,18 +14,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build prompt for tweet transformation
-    const prompt = `You are a tweet formatter. Transform the following draft into a cleaner, more engaging, and well-formatted tweet. Keep it under 280 characters. Return ONLY the improved tweet, nothing else.
+    const emojiRule = emojiMode === "none"
+      ? "- No emojis"
+      : emojiMode === "few"
+      ? "- Use 1-2 emojis sparingly"
+      : emojiMode === "moderate"
+      ? "- Use 2-3 emojis"
+      : "- Use emojis freely";
+
+    const strictLimits = `STRICT LIMITS:
+- Maximum ${maxChars} characters (THIS IS MANDATORY)
+${emojiRule}
+- No hashtags`;
+
+    const guidelines = `GUIDELINES:
+- Lead with the most valuable/engaging part
+- Sound human and conversational
+- Make it punchy and scannable`;
+
+    const styleNote = context ? `\nAuthor style: ${context}` : "";
+
+    const prompt = `${strictLimits}
+
+${guidelines}${styleNote}
 
 Draft: ${draft}
 
-Constraints:
-- Maximum ${maxChars} characters
-- Emoji style: ${emojiMode}
+Respond with ONLY the rewritten tweet. No quotes, no explanation.`;
 
-Improved tweet:`;
-
-    // Generate transformed tweet using Ollama
     const transformed = await generateWithOllama(prompt);
 
     return NextResponse.json({ transformed });
