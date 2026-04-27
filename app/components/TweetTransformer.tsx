@@ -14,15 +14,26 @@ export function TweetTransformer() {
     if (!input.trim()) return;
 
     setIsLoading(true);
-    console.log("Transforming:", input);
     
     try {
-      // Future API integration with Ollama
-      // For now, simulate a transformation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setResult(`[Transformed] ${input}`);
+      const response = await fetch("/api/transform", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ draft: input }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Transformation failed");
+      }
+
+      setResult(data.transformed);
     } catch (error) {
       console.error("Transformation failed:", error);
+      setResult("Error: Failed to transform. Make sure Ollama is running.");
     } finally {
       setIsLoading(false);
     }
