@@ -60,20 +60,20 @@ export function TweetTransformer() {
         />
         <div className="flex items-center justify-between mt-2">
           <FilterButton isOpen={filtersOpen} onToggle={() => setFiltersOpen(!filtersOpen)} filters={filters} />
-          <button
-            onClick={handleTransform}
-            disabled={!input.trim() || isLoading}
-            className="px-4 py-1.5 bg-[#fafafa] text-[#141414] text-sm font-medium rounded-full disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
-          >
-            {isLoading ? "Transforming..." : "Transform"}
-          </button>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs ${characterCount > maxCharacters ? "text-red-400" : "text-[#888888]"}`}>
+              {characterCount} / {maxCharacters}
+            </span>
+            <button
+              onClick={handleTransform}
+              disabled={!input.trim() || isLoading}
+              className="px-4 py-1.5 bg-[#fafafa] text-[#141414] text-sm font-medium rounded-full disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            >
+              {isLoading ? "Transforming..." : "Transform"}
+            </button>
+          </div>
         </div>
         {filtersOpen && <FilterPanel filters={filters} onFiltersChange={setFilters} />}
-        <div className="flex items-center justify-between mt-2">
-          <span className={`text-xs ${characterCount > maxCharacters ? "text-red-400" : "text-[#888888]"}`}>
-            {characterCount} / {maxCharacters}
-          </span>
-        </div>
         {error && (
           <p className="mt-3 text-xs text-red-400">{error}</p>
         )}
