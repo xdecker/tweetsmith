@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FilterButton, FilterPanel, type Filters } from "./FilterOptions";
+import { ContextButton, ContextPanel } from "./ContextSettings";
 
 export function TweetTransformer() {
   const [input, setInput] = useState("");
@@ -11,6 +12,9 @@ export function TweetTransformer() {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({ maxChars: 280, emojiMode: "none" });
+  const [contextOpen, setContextOpen] = useState(false);
+  const [context, setContext] = useState("");
+  const hasContext = context.length > 0;
   const characterCount = input.length;
   const maxCharacters = 280;
 
@@ -27,7 +31,7 @@ export function TweetTransformer() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ draft: input, filters }),
+        body: JSON.stringify({ draft: input, filters, context }),
       });
 
       const data = await response.json();
@@ -58,9 +62,10 @@ export function TweetTransformer() {
           rows={4}
           className="w-full bg-[#1c1c1c] text-[#fafafa] placeholder-[#888888] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-[#3a3a3a] transition-colors"
         />
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center gap-2 mt-3">
+          <ContextButton isOpen={contextOpen} onToggle={() => setContextOpen(!contextOpen)} hasContext={hasContext} />
           <FilterButton isOpen={filtersOpen} onToggle={() => setFiltersOpen(!filtersOpen)} filters={filters} />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-auto">
             <span className={`text-xs ${characterCount > maxCharacters ? "text-red-400" : "text-[#888888]"}`}>
               {characterCount} / {maxCharacters}
             </span>
@@ -73,6 +78,7 @@ export function TweetTransformer() {
             </button>
           </div>
         </div>
+        {contextOpen && <ContextPanel onContextChange={setContext} />}
         {filtersOpen && <FilterPanel filters={filters} onFiltersChange={setFilters} />}
         {error && (
           <p className="mt-3 text-xs text-red-400">{error}</p>
