@@ -6,6 +6,7 @@ export function TweetTransformer() {
   const [input, setInput] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const characterCount = input.length;
   const maxCharacters = 280;
@@ -13,8 +14,10 @@ export function TweetTransformer() {
   const handleTransform = async () => {
     if (!input.trim()) return;
 
+    setError(null);
+    setResult(null);
     setIsLoading(true);
-    
+
     try {
       const response = await fetch("/api/transform", {
         method: "POST",
@@ -31,9 +34,9 @@ export function TweetTransformer() {
       }
 
       setResult(data.transformed);
-    } catch (error) {
-      console.error("Transformation failed:", error);
-      setResult("Error: Failed to transform. Make sure Ollama is running.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Transformation failed";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +67,9 @@ export function TweetTransformer() {
             {isLoading ? "Transforming..." : "Transform"}
           </button>
         </div>
+        {error && (
+          <p className="mt-3 text-xs text-red-400">{error}</p>
+        )}
       </div>
 
       {result && (
