@@ -8,7 +8,8 @@ import { generateWithOllama } from "../../lib/ollama";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { draft } = body;
+    const { draft, filters } = body;
+    const { maxChars = 280, emojiMode = "none" } = filters || {};
 
     // Validate input
     if (!draft || typeof draft !== "string") {
@@ -22,6 +23,10 @@ export async function POST(request: NextRequest) {
     const prompt = `You are a tweet formatter. Transform the following draft into a cleaner, more engaging, and well-formatted tweet. Keep it under 280 characters. Return ONLY the improved tweet, nothing else.
 
 Draft: ${draft}
+
+Constraints:
+- Maximum ${maxChars} characters
+- Emoji style: ${emojiMode}
 
 Improved tweet:`;
 
