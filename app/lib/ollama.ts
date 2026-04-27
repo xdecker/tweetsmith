@@ -11,6 +11,7 @@ export interface OllamaRequest {
   model: string;
   prompt: string;
   stream: boolean;
+  options: {};
 }
 
 /**
@@ -23,7 +24,7 @@ export interface OllamaResponse {
 
 /**
  * Generates text using a local Ollama LLM instance.
- * 
+ *
  * @param prompt - The text prompt to send to the model
  * @returns The generated response text as a string
  * @throws Error if the request fails or returns an error
@@ -32,7 +33,10 @@ export async function generateWithOllama(prompt: string): Promise<string> {
   const requestBody: OllamaRequest = {
     model: OLLAMA_MODEL,
     prompt,
-    stream: false, // Disable streaming for simpler synchronous-style response
+    stream: false,
+    options: {
+      temperature: 0.7,
+    },
   };
 
   const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
