@@ -15,8 +15,17 @@ export function TweetTransformer() {
 
     setIsLoading(true);
     console.log("Transforming:", input);
-    // Future API integration here
-    setIsLoading(false);
+    
+    try {
+      // Future API integration with Ollama
+      // For now, simulate a transformation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setResult(`[Transformed] ${input}`);
+    } catch (error) {
+      console.error("Transformation failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
